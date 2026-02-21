@@ -638,7 +638,7 @@ func function(for symbol: String) -> Any? {
 
 @usableFromInline
 func unsafeBitCast<F>(symbol: String, in library: String, to function: F.Type) -> F? {
-  #if os(Linux)
+  #if os(Linux) || os(Android)
     guard
       let handle = dlopen("lib\(library).so", RTLD_LAZY),
       let pointer = dlsym(handle, symbol)

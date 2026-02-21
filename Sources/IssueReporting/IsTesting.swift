@@ -27,18 +27,37 @@
 
   extension ProcessInfo {
     fileprivate var isTesting: Bool {
-      if environment.keys.contains("XCTestBundlePath") { return true }
-      if environment.keys.contains("XCTestBundleInjectPath") { return true }
-      if environment.keys.contains("XCTestConfigurationFilePath") { return true }
-      if environment.keys.contains("XCTestSessionIdentifier") { return true }
+      #if os(Android)
+        // Skip's Android test runner uses swift-corelibs-xctest.
+        // Detect test context via process arguments or loaded XCTest symbols.
+        if arguments.contains(where: {
+          $0.hasSuffix("xctest") || $0.contains("XCTest") || $0 == "--testing-library"
+        }) {
+          return true
+        }
+        // Fallback: check if XCTest symbols are loaded via dlsym
+        if let handle = dlopen(nil, RTLD_LAZY),
+           dlsym(handle, "XCTestCase") != nil {
+          return true
+        }
+        // Also check swift-corelibs-xctest environment variables
+        if environment.keys.contains("XCTestBundlePath") { return true }
+        if environment.keys.contains("XCTestConfigurationFilePath") { return true }
+        return false
+      #else
+        if environment.keys.contains("XCTestBundlePath") { return true }
+        if environment.keys.contains("XCTestBundleInjectPath") { return true }
+        if environment.keys.contains("XCTestConfigurationFilePath") { return true }
+        if environment.keys.contains("XCTestSessionIdentifier") { return true }
 
-      return arguments.contains { argument in
-        let path = URL(fileURLWithPath: argument)
-        return path.lastPathComponent == "swiftpm-testing-helper"
-          || argument == "--testing-library"
-          || path.lastPathComponent == "xctest"
-          || path.pathExtension == "xctest"
-      }
+        return arguments.contains { argument in
+          let path = URL(fileURLWithPath: argument)
+          return path.lastPathComponent == "swiftpm-testing-helper"
+            || argument == "--testing-library"
+            || path.lastPathComponent == "xctest"
+            || path.pathExtension == "xctest"
+        }
+      #endif
     }
   }
 #endif
