@@ -2,6 +2,9 @@
   public let isTesting = false
 #else
   import Foundation
+  #if os(Android)
+    import Android
+  #endif
 
   /// Whether or not the current process is running tests.
   ///

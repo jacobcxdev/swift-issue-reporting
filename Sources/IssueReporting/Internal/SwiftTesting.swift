@@ -1,6 +1,9 @@
 import Foundation
 import IssueReportingPackageSupport
 
+#if os(Android)
+  import Android
+#endif
 #if canImport(WinSDK)
   import WinSDK
 #endif
